@@ -171,6 +171,8 @@ columnas_alertas = [
     "formatos_pedidos",
     "formatos_recomendados",
     "estado",
+    "prioridad",
+    "accion_recomendada",
     "es_perecedero",
 ]
 
@@ -184,7 +186,9 @@ st.dataframe(
         "formatos_pedidos": "Pedido",
         "formatos_recomendados": "Recomendado",
         "estado": "Estado",
-        "es_perecedero": "Perecedero"
+        "es_perecedero": "Perecedero",
+        "prioridad": "Prioridad",
+        "accion_recomendada": "Acción recomendada",
     }
 )
 

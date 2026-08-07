@@ -28,6 +28,53 @@ def clasificar_estado(fila):
 
     return "Correcto"
 
+def calcular_prioridad(fila):
+    """
+    Asigna una prioridad a cada alerta considerando el tipo de problema,
+    la magnitud de la diferencia y si el ingrediente es perecedero.
+    """
+
+    estado = fila["estado"]
+    desviacion = fila["desviacion_formatos"]
+    perecedero = fila["es_perecedero"] == "Si"
+
+    if estado == "Olvidado":
+        return "Crítica"
+
+    if estado == "Faltante":
+        if desviacion >= 3 or perecedero:
+            return "Alta"
+        return "Media"
+
+    if estado == "Sobrepedido":
+        if perecedero and desviacion >= 3:
+            return "Alta"
+        return "Media"
+
+    return "Sin alerta"
+
+
+def generar_accion(fila):
+    """
+    Genera una recomendación concreta para la gerente de compras.
+    """
+
+    estado = fila["estado"]
+    diferencia = fila["diferencia_formatos"]
+
+    if estado == "Olvidado":
+        return f"Agregar {diferencia} formatos a la orden"
+
+    if estado == "Faltante":
+        return f"Agregar {diferencia} formatos"
+
+    if estado == "Sobrepedido":
+        return f"Reducir {abs(diferencia)} formatos"
+
+    if estado == "Correcto":
+        return "Mantener pedido"
+
+    return "No requiere compra"
 
 def generar_alertas(
     ingredientes,
@@ -52,6 +99,16 @@ def generar_alertas(
         analisis["formatos_pedidos"]
         - analisis["formatos_recomendados"]
     ).abs()
+
+    analisis["prioridad"] = analisis.apply(
+    calcular_prioridad,
+    axis=1
+    )
+
+    analisis["accion_recomendada"] = analisis.apply(
+        generar_accion,
+        axis=1
+    )
 
     return analisis
 

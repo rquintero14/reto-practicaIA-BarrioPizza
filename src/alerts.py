@@ -39,19 +39,19 @@ def calcular_prioridad(fila):
     perecedero = fila["es_perecedero"] == "Si"
 
     if estado == "Olvidado":
-        return "Crítica"
+        return "🔴 Crítica"
 
     if estado == "Faltante":
         if desviacion >= 3 or perecedero:
-            return "Alta"
-        return "Media"
+            return "🟠 Alta"
+        return "🟡 Media"
 
     if estado == "Sobrepedido":
         if perecedero and desviacion >= 3:
-            return "Alta"
-        return "Media"
+            return "🟠 Alta"
+        return "🟡 Media"
 
-    return "Sin alerta"
+    return "🟢 Sin alerta"
 
 
 def generar_accion(fila):

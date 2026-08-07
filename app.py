@@ -119,6 +119,11 @@ col5.metric(
     desconocidos
 )
 
+st.info(
+    f"Se analizaron {len(analisis)} combinaciones de sucursal e ingrediente. "
+    f"Se detectaron {total_alertas} alertas que requieren atención "
+    f"y {desconocidos} registro(s) que requieren revisión manual."
+)
 
 # ---------------------------------------------------------
 # ALERTAS
@@ -164,6 +169,23 @@ if estado_seleccionado != "Todas":
         == estado_seleccionado
     ]
 
+# Ordenamos las alertas para mostrar primero las más importantes.
+orden_prioridad = {
+    "🔴 Crítica": 1,
+    "🟠 Alta": 2,
+    "🟡 Media": 3
+}
+
+alertas_filtradas["orden_prioridad"] = (
+    alertas_filtradas["prioridad"]
+    .map(orden_prioridad)
+    .fillna(4)
+)
+
+alertas_filtradas = alertas_filtradas.sort_values(
+    by=["orden_prioridad", "sucursal", "nombre"]
+)
+
 
 columnas_alertas = [
     "sucursal",
@@ -183,43 +205,59 @@ st.dataframe(
     column_config={
         "sucursal": "Sucursal",
         "nombre": "Ingrediente",
-        "formatos_pedidos": "Pedido",
-        "formatos_recomendados": "Recomendado",
+        "formatos_pedidos": st.column_config.NumberColumn(
+            "Pedido",
+            format="%d"
+        ),
+        "formatos_recomendados": st.column_config.NumberColumn(
+            "Recomendado",
+            format="%d"
+        ),
         "estado": "Estado",
-        "es_perecedero": "Perecedero",
-        "prioridad": "Prioridad",
-        "accion_recomendada": "Acción recomendada",
+        "prioridad": st.column_config.TextColumn(
+            "Prioridad",
+            help="Nivel de atención recomendado para esta alerta"
+        ),
+        "accion_recomendada": st.column_config.TextColumn(
+            "Acción recomendada",
+            width="large"
+        ),
+        "es_perecedero": "Perecedero"
     }
 )
 
 
 # ---------------------------------------------------------
-# DISTRIBUCIÓN DE RESULTADOS
+# ALERTAS POR SUCURSAL
 # ---------------------------------------------------------
 
-st.subheader("📊 Estado general de las órdenes")
+st.subheader("📊 Alertas por sucursal")
 
-conteo_estados = (
-    analisis["estado"]
-    .value_counts()
-    .reset_index()
+alertas_por_sucursal = (
+    alertas
+    .groupby(["sucursal", "estado"])
+    .size()
+    .reset_index(name="cantidad")
 )
 
-conteo_estados.columns = [
-    "Estado",
-    "Cantidad"
-]
-
 fig = px.bar(
-    conteo_estados,
-    x="Estado",
-    y="Cantidad",
-    text="Cantidad"
+    alertas_por_sucursal,
+    x="sucursal",
+    y="cantidad",
+    color="estado",
+    text="cantidad",
+    barmode="stack",
+    labels={
+        "sucursal": "Sucursal",
+        "cantidad": "Cantidad de alertas",
+        "estado": "Tipo de alerta"
+    }
 )
 
 fig.update_layout(
     xaxis_title="",
-    yaxis_title="Ingredientes"
+    yaxis_title="Cantidad de alertas",
+    legend_title="Tipo de alerta"
 )
 
 st.plotly_chart(

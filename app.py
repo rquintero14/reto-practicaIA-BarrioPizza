@@ -119,6 +119,26 @@ col5.metric(
     desconocidos
 )
 
+if "🔴 Crítica" in analisis["prioridad"].values:
+    st.error(
+        "🔴 Existen pedidos críticos que requieren corrección antes de realizar la compra."
+    )
+
+elif "🟠 Alta" in analisis["prioridad"].values:
+    st.warning(
+        "🟠 Se detectaron pedidos con diferencias importantes."
+    )
+
+elif "🟡 Media" in analisis["prioridad"].values:
+    st.info(
+        "🟡 Existen diferencias menores en algunas órdenes."
+    )
+
+else:
+    st.success(
+        "🟢 TODAS LAS ÓRDENES SON CORRECTAS."
+    )
+
 st.info(
     f"Se analizaron {len(analisis)} combinaciones de sucursal e ingrediente. "
     f"Se detectaron {total_alertas} alertas que requieren atención "
@@ -339,16 +359,26 @@ historico_detalle = consumo[
     )
 ].sort_values("semana")
 
+# ---------------------------------------------------------
+# AGREGAMOS LA SEMANA PROYECTADA
+# ---------------------------------------------------------
+
+proyeccion = pd.DataFrame({
+    "semana": ["S7 (Predicción)"],
+    "consumo_unidad_base": [detalle["consumo_proyectado"]]
+})
+
+historico_grafica = pd.concat(
+    [historico_detalle, proyeccion],
+    ignore_index=True
+)
 
 fig_historico = px.line(
-    historico_detalle,
+    historico_grafica,
     x="semana",
     y="consumo_unidad_base",
     markers=True,
-    title=(
-        f"Consumo histórico — "
-        f"{ingrediente_detalle}"
-    )
+    title=f"Consumo histórico y proyección — {ingrediente_detalle}"
 )
 
 fig_historico.update_layout(
@@ -356,11 +386,119 @@ fig_historico.update_layout(
     yaxis_title=detalle["unidad_base"]
 )
 
+fig_historico.add_vline(
+    x=5.5,
+    line_dash="dash",
+    line_color="orange"
+)
+
+fig_historico.add_annotation(
+    x="S7 (Predicción)",
+    y=detalle["consumo_proyectado"],
+    text="Predicción",
+    showarrow=True,
+    arrowhead=2
+)
+
 st.plotly_chart(
     fig_historico,
     use_container_width=True
 )
 
+st.caption(
+    "La semana S7 corresponde a la proyección calculada utilizando "
+    "el promedio ponderado de las últimas seis semanas."
+)
+
+# ---------------------------------------------------------
+# ORDEN RECOMENDADA
+# ---------------------------------------------------------
+
+st.subheader("📦 Orden de compra recomendada")
+
+sucursal_orden = st.selectbox(
+    "Sucursal para generar la orden",
+    sucursales,
+    key="orden_sucursal"
+)
+
+orden_recomendada = (
+    analisis[
+        analisis["sucursal"] == sucursal_orden
+    ]
+    .copy()
+)
+
+correctos = (
+    orden_recomendada["estado"] == "Correcto"
+).sum()
+
+cambios = (
+    orden_recomendada["estado"] != "Correcto"
+).sum()
+
+total = len(orden_recomendada)
+
+st.markdown(f"### 📍 {sucursal_orden}")
+
+c1, c2, c3 = st.columns(3)
+
+c1.metric(
+    "✅ Correctos",
+    int(correctos)
+)
+
+c2.metric(
+    "⚠️ Requieren cambios",
+    int(cambios)
+)
+
+c3.metric(
+    "📦 Ingredientes analizados",
+    total
+)
+
+mostrar_solo_cambios = st.checkbox(
+    "Mostrar únicamente ingredientes que requieren cambios",
+    value=True
+)
+
+if mostrar_solo_cambios:
+    orden_recomendada = orden_recomendada[
+        orden_recomendada["formatos_pedidos"]
+        != orden_recomendada["formatos_recomendados"]
+    ]
+
+orden_recomendada = orden_recomendada[
+    [
+        "nombre",
+        "formatos_pedidos",
+        "formatos_recomendados",
+        "accion_recomendada"
+    ]
+]
+
+orden_recomendada.columns = [
+    "Ingrediente",
+    "Pedido actual",
+    "Pedido recomendado",
+    "Acción"
+]
+
+st.dataframe(
+    orden_recomendada,
+    use_container_width=True,
+    hide_index=True
+)
+
+csv = orden_recomendada.to_csv(index=False).encode("utf-8")
+
+st.download_button(
+    "⬇ Descargar orden recomendada (CSV)",
+    data=csv,
+    file_name=f"orden_recomendada_{sucursal_orden}.csv",
+    mime="text/csv"
+)
 
 # ---------------------------------------------------------
 # DATOS QUE REQUIEREN REVISIÓN

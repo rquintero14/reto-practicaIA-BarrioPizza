@@ -63,16 +63,16 @@ def generar_accion(fila):
     diferencia = fila["diferencia_formatos"]
 
     if estado == "Olvidado":
-        return f"Agregar {diferencia} formatos a la orden"
+        return f"➕ Agregar {diferencia} formatos a la orden"
 
     if estado == "Faltante":
-        return f"Agregar {diferencia} formatos"
+        return f"➕ Agregar {diferencia} formatos"
 
     if estado == "Sobrepedido":
-        return f"Reducir {abs(diferencia)} formatos"
+        return f"➖ Reducir {abs(diferencia)} formatos"
 
     if estado == "Correcto":
-        return "Mantener pedido"
+        return "✅ Mantener pedido"
 
     return "No requiere compra"
 
@@ -144,6 +144,8 @@ if __name__ == "__main__":
         "formatos_recomendados",
         "diferencia_formatos",
         "estado",
+        "prioridad",
+        "accion_recomendada",
         "es_perecedero",
     ]
 

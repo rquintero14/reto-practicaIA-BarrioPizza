@@ -1,0 +1,257 @@
+/* ==========================================================
+   SISTEMA INTELIGENTE DE GESTIÓN DE COMPRAS
+   BARRIO PIZZA
+========================================================== */
+
+/* ---------------------------
+   Fondo general
+----------------------------*/
+
+.main .block-container{
+
+    padding-top:2rem;
+    padding-bottom:2rem;
+    max-width:1400px;
+
+}
+
+
+/* ---------------------------
+   Títulos
+----------------------------*/
+
+h1{
+
+    font-size:2.4rem !important;
+    font-weight:700 !important;
+    margin-bottom:.3rem;
+
+}
+
+h2{
+
+    font-size:1.7rem !important;
+
+}
+
+h3{
+
+    font-size:1.3rem !important;
+
+}
+
+
+/* ---------------------------
+   Tabs
+----------------------------*/
+
+.stTabs [role="tab-list"]{
+
+    gap:10px;
+    margin-bottom:25px;
+
+}
+
+.stTabs [role="tab"]{
+
+    background:#232323;
+
+    border-radius:5px 5px 0px 0px;
+
+    padding:12px 28px;
+
+    color:#d7d7d7;
+
+    font-weight:600;
+
+    transition:.25s;
+
+    border:none;
+
+}
+
+.stTabs [role="tab"]:hover{
+
+    background:#303030;
+
+    color:white;
+
+}
+
+.stTabs [aria-selected="true"]{
+
+    background:#613030 !important;
+
+    color:white !important;
+
+}
+
+
+/* ---------------------------
+   Tarjetas INFO
+----------------------------*/
+
+div[data-testid="stAlert"]{
+
+    border-radius:12px;
+
+}
+
+
+/* ---------------------------
+   Botones
+----------------------------*/
+
+.stButton>button{
+
+    width:100%;
+
+    border-radius:10px;
+
+    border:none;
+
+    padding:.65rem;
+
+    background:#C62828;
+
+    color:white;
+
+    font-weight:600;
+
+    transition:.25s;
+
+}
+
+.stButton>button:hover{
+
+    background:#A81E1E;
+
+}
+
+
+/* ---------------------------
+   Download Button
+----------------------------*/
+
+.stDownloadButton>button{
+
+    width:100%;
+
+    border-radius:10px;
+
+    border:none;
+
+    padding:.70rem;
+
+    background:#C62828;
+
+    color:white;
+
+    font-weight:600;
+
+    transition:.25s;
+
+}
+
+.stDownloadButton>button:hover{
+
+    background:#A81E1E;
+
+}
+
+
+/* ---------------------------
+   Selectbox
+----------------------------*/
+
+.stSelectbox>div>div{
+
+    border-radius:10px;
+
+}
+
+
+/* ---------------------------
+   Checkbox
+----------------------------*/
+
+.stCheckbox{
+
+    margin-top:8px;
+    margin-bottom:10px;
+
+}
+
+
+/* ---------------------------
+   Dataframes
+----------------------------*/
+
+div[data-testid="stDataFrame"]{
+
+    border:1px solid #303030;
+
+    border-radius:12px;
+
+    overflow:hidden;
+
+}
+
+
+/* ---------------------------
+   Expander
+----------------------------*/
+
+details{
+
+    border-radius:10px;
+
+}
+
+
+/* ---------------------------
+   Separadores
+----------------------------*/
+
+hr{
+
+    margin-top:2rem;
+    margin-bottom:2rem;
+
+}
+
+
+/* ---------------------------
+   Caption
+----------------------------*/
+
+[data-testid="stCaptionContainer"]{
+
+    color:#9e9e9e;
+
+}
+
+
+/* ---------------------------
+   Scrollbar
+----------------------------*/
+
+::-webkit-scrollbar{
+
+    width:10px;
+
+}
+
+::-webkit-scrollbar-thumb{
+
+    background:#4a4a4a;
+
+    border-radius:10px;
+
+}
+
+::-webkit-scrollbar-thumb:hover{
+
+    background:#666;
+
+}

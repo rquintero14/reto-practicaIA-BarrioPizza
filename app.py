@@ -6,7 +6,7 @@ from src.data_loader import cargar_datos
 from src.alerts import generar_alertas, clasificar_estado, calcular_prioridad, generar_accion
 from src.validator import validar_datos
 from src.anomalies import detectar_ordenes_atipicas
-
+from src.chat import preguntar_datos
 
 # ---------------------------------------------------------
 # CONFIGURACIÓN
@@ -102,11 +102,12 @@ st.divider()
 # PESTAÑAS PRINCIPALES
 # ==========================================================
 
-tab_dashboard, tab_analisis, tab_ordenes = st.tabs(
+tab_dashboard, tab_analisis, tab_ordenes, tab_chat = st.tabs(
     [
         "📊 Dashboard",
         "📈 Análisis",
-        "📦 Orden recomendada"
+        "📦 Orden recomendada",
+        "💬 Chat con los datos"
     ]
 )
 
@@ -778,3 +779,54 @@ with tab_ordenes:
             la orden enviada por la sucursal.
             """
         )
+
+with tab_chat:
+
+    # ---------------------------------------------------------
+    # CHAT CON LOS DATOS
+    # ---------------------------------------------------------
+    st.subheader("💬 Preguntale a tus datos")
+    st.caption(
+        "Escribí una pregunta en español normal sobre las órdenes de esta "
+        "semana. Por ejemplo: '¿qué sucursal está pidiendo demasiado queso?' "
+        "o '¿hay algo crítico en Marbella?'"
+    )
+
+    api_key = st.secrets.get("GEMINI_API_KEY")
+
+    if not api_key:
+        st.warning(
+            "⚠️ No se encontró la API key de Gemini. Configurala en "
+            "`.streamlit/secrets.toml` (localmente) o en los Secrets de "
+            "Streamlit Cloud (una vez desplegado) para activar el chat."
+        )
+    else:
+        if "chat_historial" not in st.session_state:
+            st.session_state.chat_historial = []
+
+        for pregunta_previa, respuesta_previa in st.session_state.chat_historial:
+            with st.chat_message("user"):
+                st.write(pregunta_previa)
+            with st.chat_message("assistant"):
+                st.write(respuesta_previa)
+
+        pregunta = st.chat_input("Escribí tu pregunta acá...")
+
+        if pregunta:
+            with st.chat_message("user"):
+                st.write(pregunta)
+
+            with st.chat_message("assistant"):
+                with st.spinner("Revisando los datos..."):
+                    try:
+                        respuesta = preguntar_datos(
+                            pregunta, analisis, atipicas, api_key
+                        )
+                    except Exception as error:
+                        respuesta = (
+                            "⚠️ No pude conectarme con el modelo de IA. "
+                            f"Detalle técnico: {error}"
+                        )
+                st.write(respuesta)
+
+            st.session_state.chat_historial.append((pregunta, respuesta))        

@@ -535,6 +535,54 @@ with tab_ordenes:
         mime="text/csv"
     )
 
+    st.divider()
+
+    # ---------------------------------------------------------
+    # PEDIDO CORREGIDO AGRUPADO POR PROVEEDOR
+    # ---------------------------------------------------------
+    st.subheader("📦 Pedido corregido por proveedor")
+    st.caption(
+        "Agrupa la orden recomendada por proveedor, para poder reenviarle "
+        "a cada uno directamente la parte del pedido que le corresponde."
+    )
+
+    pedido_por_proveedor = analisis[
+        (analisis["sucursal"] == sucursal_orden)
+        & (analisis["formatos_recomendados"] > 0)
+    ][["proveedor", "nombre", "formatos_recomendados", "unidad_base_por_formato"]].copy()
+
+    pedido_por_proveedor.columns = [
+        "Proveedor", "Ingrediente", "Formatos a pedir", "Unidades por formato"
+    ]
+
+    if pedido_por_proveedor.empty:
+        st.info(f"{sucursal_orden} no necesita pedir nada esta semana.")
+    else:
+        proveedores = sorted(pedido_por_proveedor["Proveedor"].unique())
+
+        for proveedor in proveedores:
+            tabla_proveedor = (
+                pedido_por_proveedor[pedido_por_proveedor["Proveedor"] == proveedor]
+                .drop(columns="Proveedor")
+                .sort_values("Ingrediente")
+            )
+
+            with st.expander(f"{proveedor} ({len(tabla_proveedor)} ingredientes)"):
+                st.dataframe(
+                    tabla_proveedor,
+                    use_container_width=True,
+                    hide_index=True
+                )
+
+                csv_proveedor = tabla_proveedor.to_csv(index=False).encode("utf-8")
+                st.download_button(
+                    f"⬇ Descargar pedido para {proveedor}",
+                    data=csv_proveedor,
+                    file_name=f"pedido_{sucursal_orden}_{proveedor}.csv".replace(" ", "_"),
+                    mime="text/csv",
+                    key=f"download_{sucursal_orden}_{proveedor}"
+                )
+
     # ---------------------------------------------------------
     # DATOS QUE REQUIEREN REVISIÓN
     # ---------------------------------------------------------

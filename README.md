@@ -5,7 +5,6 @@ Herramienta que analiza automáticamente las órdenes de compra semanales de las
 > Reto técnico para la práctica de IA en Barrio Pizza. Repo original con el enunciado y los datos: https://github.com/soydelbarrio/reto-practicante-ia
 
 **🔗 App en vivo:** [Reto Barrio Pizza - Roniel Quintero](https://reto-practicaia-barriopizza.streamlit.app/)
-**🎥 Video explicativo:** _[pegar acá el link del video]_
 
 ---
 

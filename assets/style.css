@@ -46,7 +46,6 @@ h1 {
     font-weight: 600 !important;
     letter-spacing: -0.01em;
     color: var(--bp-text) !important;
-    border-bottom: 3px solid var(--bp-tomato);
     padding-bottom: 0.4rem;
     display: inline-block;
 }

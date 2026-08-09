@@ -11,6 +11,8 @@ Herramienta que analiza automáticamente las órdenes de compra semanales de las
 
 ## Qué hace
 
+### Lo mínimo pedido por el reto
+
 1. **Proyecta** el consumo de la próxima semana por sucursal e ingrediente, usando un promedio ponderado de las últimas 6 semanas (le da más peso a las semanas recientes).
 2. Calcula la **necesidad real** = consumo proyectado − inventario actual (nunca negativa).
 3. Convierte esa necesidad a **formatos de compra completos** (redondeando siempre hacia arriba, porque no se compran medios sacos).
@@ -19,8 +21,16 @@ Herramienta que analiza automáticamente las órdenes de compra semanales de las
    - **Faltante** — se pidió menos de lo recomendado.
    - **Sobrepedido** — se pidió más de lo recomendado.
    - **Correcto** — coincide con la recomendación.
-5. Asigna una **prioridad** (🔴 Crítica / 🟠 Alta / 🟡 Media) según el tamaño de la diferencia y si el ingrediente es perecedero — un faltante pequeño de algo perecedero se trata como urgente aunque la desviación numérica sea chica.
-6. Muestra todo en un **dashboard** con 3 vistas: resumen de alertas, análisis por ingrediente con gráfica de histórico + proyección, y orden de compra recomendada descargable en CSV.
+5. Asigna una **prioridad** (🔴 Crítica / 🟠 Alta / 🟡 Media) según el tamaño de la diferencia y si el ingrediente es perecedero.
+6. Muestra todo en un **dashboard** con alertas de un vistazo y gráfica de distribución por sucursal.
+
+### Extras agregados (secciones "para destacar" del reto)
+
+- **📦 Pedido corregido por proveedor** — la orden recomendada, agrupada por proveedor, con un CSV descargable por cada uno, lista para reenviar directamente.
+- **🔍 Detección de órdenes atípicas entre sucursales** — compara qué % del pedido semanal de cada ingrediente le corresponde a cada sucursal, contra qué % representa históricamente en el consumo de ese mismo ingrediente entre las 4 sucursales. Detecta acaparamiento desproporcionado sin mezclar unidades distintas (ver `src/anomalies.py`).
+- **✏️ Editar orden con alertas en vivo** — una tabla editable donde se pueden simular cambios en las cantidades pedidas y ver al instante cómo se actualizarían las alertas, sin tocar los archivos originales. Es la aproximación a "la visión final" que describe el reto.
+- **💬 Chat con los datos** — un chat en lenguaje natural (Gemini API) donde se le puede preguntar directamente al análisis de la semana (ej. *"¿qué sucursal tiene la alerta más crítica?"*), sin tener que leer tablas.
+- **Identidad visual propia** — el dashboard tiene una paleta y tipografía diseñadas específicamente para este proyecto (ver `assets/style.css`), en vez del tema por defecto de Streamlit.
 
 ---
 
@@ -39,7 +49,17 @@ source .venv/bin/activate   # Mac/Linux
 # 3. Instalar dependencias
 pip install -r requirements.txt
 
-# 4. Correr la app
+# 4. Configurar la API key de Gemini (necesaria para el tab "Chat con los datos")
+```
+
+Para el chat con los datos, creá el archivo `.streamlit/secrets.toml` en la raíz del proyecto:
+```toml
+GEMINI_API_KEY = "tu-key-de-Google-AI-Studio"
+```
+La key se saca gratis, sin tarjeta, en [aistudio.google.com](https://aistudio.google.com) → "Get API key". Sin esta key, el resto del dashboard funciona igual — solo el tab de chat muestra un aviso en vez de responder.
+
+```bash
+# 5. Correr la app
 streamlit run app.py
 ```
 
@@ -52,6 +72,7 @@ python -m src.data_loader     # Verifica que los 4 CSV cargan bien
 python -m src.recommendations # Muestra el cálculo de proyección y recomendación
 python -m src.alerts          # Muestra el resumen de alertas y prioridades
 python -m src.validator       # Muestra ingredientes desconocidos y datos faltantes
+python -m src.anomalies       # Muestra las órdenes atípicas entre sucursales
 ```
 
 ---
@@ -59,15 +80,18 @@ python -m src.validator       # Muestra ingredientes desconocidos y datos faltan
 ## Estructura del proyecto
 
 ```
-├── app.py                    # Dashboard de Streamlit (3 tabs)
+├── app.py                    # Dashboard de Streamlit (4 tabs)
 ├── src/
 │   ├── data_loader.py        # Carga los 4 CSV
 │   ├── forecasting.py        # Proyección de consumo (promedio ponderado)
 │   ├── recommendations.py    # Necesidad real, conversión a formatos, recomendación
 │   ├── alerts.py             # Clasificación de estado, prioridad y acción recomendada
-│   └── validator.py          # Detección de ingredientes desconocidos y datos incompletos
-├── assets/style.css          # Estilos del dashboard
+│   ├── validator.py          # Detección de ingredientes desconocidos y datos incompletos
+│   ├── anomalies.py          # Detección de órdenes atípicas entre sucursales
+│   └── chat.py                # Chat con los datos (Gemini API)
+├── assets/style.css          # Identidad visual del dashboard
 ├── datos/                    # CSVs provistos por Barrio Pizza
+├── .streamlit/secrets.toml   # API key de Gemini (NO se sube a git)
 └── requirements.txt
 ```
 
@@ -75,19 +99,25 @@ python -m src.validator       # Muestra ingredientes desconocidos y datos faltan
 
 ## Supuestos que hice
 
-- **Proyección de consumo:** promedio ponderado de las últimas 6 semanas, dándole más peso a las semanas recientes, en vez de un promedio simple — así la herramienta reacciona más rápido a tendencias de crecimiento o caída en el consumo.
-- **Redondeo:** la necesidad en unidad base se convierte a formatos de compra redondeando siempre hacia arriba (`np.ceil`), porque los proveedores solo venden formatos completos. Un excedente menor a un formato completo no se trata como sobrepedido.
-- **Necesidad negativa:** si el inventario ya cubre la proyección, la necesidad se fija en 0 en vez de un valor negativo (no tiene sentido "necesidad negativa" de compra).
-- **Ingredientes no pedidos:** si una sucursal no incluye un ingrediente en su orden, se asume que pidió 0 formatos. Si la recomendación para ese ingrediente es mayor a 0, se marca como "Olvidado" con prioridad crítica.
-- **Ingredientes desconocidos:** si una orden incluye un `ingrediente_id` que no existe en el catálogo, no se calcula una recomendación (no hay forma de saber su formato de compra ni si es perecedero) — se lista aparte en la sección "Revisión manual" del dashboard en vez de descartarse silenciosamente.
-- **Prioridad y perecederos:** un faltante se marca como prioridad Alta si la desviación es de 3 o más formatos, **o** si el ingrediente es perecedero (aunque la desviación sea de 1 formato) — porque quedarse corto de un perecedero es más urgente. Un sobrepedido solo sube a Alta si es perecedero **y** la desviación es de 3 o más formatos, ya que sobrepedir algo no perecedero es un problema menor (solo capital inmovilizado, no desperdicio).
-- **Combinación sucursal + inventario como base del análisis:** el análisis parte de `inventario_actual.csv`, asumiendo que toda combinación sucursal-ingrediente relevante tiene un registro de inventario. Si una sucursal pidiera un ingrediente del catálogo sin registro de inventario para esa sucursal, quedaría fuera del análisis — no se detectó este caso en los datos provistos, pero se deja documentado como una limitación conocida.
+**Sobre el cálculo de la recomendación:**
+- **Proyección de consumo:** promedio ponderado de las últimas 6 semanas, dándole más peso a las semanas recientes, en vez de un promedio simple.
+- **Redondeo:** la necesidad en unidad base se convierte a formatos de compra redondeando siempre hacia arriba (`np.ceil`), porque los proveedores solo venden formatos completos.
+- **Necesidad negativa:** si el inventario ya cubre la proyección, la necesidad se fija en 0.
+- **Ingredientes no pedidos:** si una sucursal no incluye un ingrediente en su orden, se asume que pidió 0 formatos. Si la recomendación es mayor a 0, se marca "Olvidado" con prioridad crítica.
+- **Ingredientes desconocidos:** si una orden incluye un `ingrediente_id` que no existe en el catálogo, no se calcula recomendación — se lista aparte en "Revisión manual" en vez de descartarse silenciosamente.
+- **Prioridad y perecederos:** un faltante es prioridad Alta si la desviación es ≥3 formatos **o** si el ingrediente es perecedero. Un sobrepedido solo sube a Alta si es perecedero **y** la desviación es ≥3 formatos.
+- **Base del análisis:** el análisis parte de `inventario_actual.csv`, asumiendo que toda combinación sucursal-ingrediente relevante tiene registro de inventario. No se detectó ningún caso de orden sin registro de inventario en los datos provistos, pero se deja documentado como limitación conocida.
+
+**Sobre los extras:**
+- **Órdenes atípicas:** para comparar sucursales de distinto tamaño de forma justa, se normaliza por ingrediente (participación del pedido vs. participación histórica de consumo, ambas como % del total entre las 4 sucursales) en vez de comparar cantidades absolutas o mezclar unidades distintas entre ingredientes. El umbral por defecto es 20 puntos porcentuales de desviación.
+- **Editar orden en vivo:** los cambios hechos en esa tabla son una simulación aislada — no modifican `analisis`, el Dashboard ni la "Orden recomendada" oficial. Es una decisión deliberada para que la gerente pueda explorar "qué pasaría si..." sin que eso se confunda con la orden real ya confirmada.
+- **Chat con los datos:** el modelo solo recibe como contexto la tabla de análisis y la de órdenes atípicas ya calculadas (no los CSV crudos), y tiene instrucción explícita de no inventar cifras que no estén ahí. Si se le pregunta algo que los datos no permiten responder (ej. costos, ya que no hay precios en los CSV), lo dice en vez de inventar un número.
 
 ---
 
 ## Cómo usé IA para resolverlo
 
-_[Completar acá con el detalle real: qué partes armaste con ayuda de IA (ej. estructura del proyecto, lógica de alertas/prioridad, CSS del dashboard, debugging), qué le pediste explícitamente, y qué decisiones de negocio tomaste vos (ej. las reglas de prioridad para perecederos) en vez de aceptar la primera sugerencia.]_
+_[Completar acá con el detalle real: qué partes armaste con ayuda de IA (ej. estructura del proyecto, lógica de alertas/prioridad, el módulo de órdenes atípicas, la integración con Gemini, el CSS), qué le pediste explícitamente, y qué decisiones de negocio tomaste vos en vez de aceptar la primera sugerencia (ej. las reglas de prioridad para perecederos, o la normalización por participación en vez de valores absolutos para detectar órdenes atípicas).]_
 
 ---
 
@@ -96,9 +126,10 @@ _[Completar acá con el detalle real: qué partes armaste con ayuda de IA (ej. e
 Si tuviera que integrarlo con un sistema como Odoo:
 
 - **Origen de datos:** reemplazar la lectura de los CSV en `data_loader.py` por llamadas al API XML-RPC/JSON-RPC de Odoo (módulos de Inventario y Compras) para traer stock actual, histórico de movimientos de inventario y órdenes de compra en tiempo real.
-- **Catálogo de ingredientes:** mapear `ingredientes.csv` a los productos y sus unidades de medida/UoM configuradas en Odoo (Odoo ya maneja conversiones de unidad de compra vs. unidad de consumo de forma nativa).
-- **Alertas automáticas:** en vez de que la gerente entre al dashboard, se podría correr `alerts.py` como un cron job (Odoo Scheduled Actions) que dispare notificaciones o cree actividades/tareas en Odoo cuando detecte una orden con alerta crítica, antes de que la orden de compra se confirme.
-- **Cierre del loop:** las órdenes recomendadas (el CSV que hoy se descarga manualmente) podrían escribirse directamente como líneas de una orden de compra en el módulo de Compras de Odoo vía API, para que la gerente solo tenga que aprobar en vez de re-tipear.
+- **Catálogo de ingredientes:** mapear `ingredientes.csv` a los productos y sus unidades de medida/UoM configuradas en Odoo.
+- **Alertas automáticas:** correr `alerts.py` y `anomalies.py` como un cron job (Odoo Scheduled Actions) que dispare notificaciones o tareas en Odoo cuando detecte una alerta crítica, antes de que la orden se confirme.
+- **Cierre del loop:** las órdenes recomendadas (hoy un CSV manual) podrían escribirse directamente como líneas de una orden de compra en el módulo de Compras de Odoo vía API.
+- **Chat con los datos:** el mismo patrón de `chat.py` podría exponerse como un asistente dentro de Odoo, con el contexto armado a partir de las tablas reales del ERP en vez de los CSV de prueba.
 
 ---
 

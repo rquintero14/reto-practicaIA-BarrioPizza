@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.express as px
 
 from src.data_loader import cargar_datos
-from src.alerts import generar_alertas
+from src.alerts import generar_alertas, clasificar_estado, calcular_prioridad, generar_accion
 from src.validator import validar_datos
 from src.anomalies import detectar_ordenes_atipicas
 
@@ -618,6 +618,101 @@ with tab_ordenes:
                     mime="text/csv",
                     key=f"download_{sucursal_orden}_{proveedor}"
                 )
+
+    st.divider()
+
+    # ---------------------------------------------------------
+    # EDITAR ORDEN Y VER ALERTAS ACTUALIZADAS EN VIVO
+    # ---------------------------------------------------------
+    st.subheader("✏️ Editar orden y ver alertas actualizadas")
+    st.caption(
+        "Cambiá las cantidades pedidas para simular ajustes y ver cómo "
+        "cambiarían las alertas antes de enviar la orden final al proveedor. "
+        "No modifica los archivos originales."
+    )
+
+    base_editable = analisis[
+        analisis["sucursal"] == sucursal_orden
+    ][
+        [
+            "nombre",
+            "formatos_pedidos",
+            "formatos_recomendados",
+            "es_perecedero",
+        ]
+    ].sort_values("nombre").reset_index(drop=True)
+
+    tabla_editor = base_editable.rename(
+        columns={
+            "nombre": "Ingrediente",
+            "formatos_pedidos": "Pedido (editable)",
+            "formatos_recomendados": "Recomendado",
+            "es_perecedero": "Perecedero",
+        }
+    )
+
+    tabla_editada = st.data_editor(
+        tabla_editor,
+        use_container_width=True,
+        hide_index=True,
+        disabled=["Ingrediente", "Recomendado", "Perecedero"],
+        column_config={
+            "Pedido (editable)": st.column_config.NumberColumn(
+                "Pedido (editable)", min_value=0, step=1
+            )
+        },
+        key=f"editor_orden_{sucursal_orden}",
+    )
+
+    # Recalculamos el análisis solo para esta sucursal, con los valores editados.
+    recalculo = base_editable.copy()
+    recalculo["formatos_pedidos"] = tabla_editada["Pedido (editable)"].values
+
+    # Al editar manualmente, el ingrediente queda explícitamente incluido
+    # en la orden (incluso si se dejó en 0), así que ya no puede salir
+    # como "Olvidado" — pasaría a "Faltante" si corresponde.
+    recalculo["incluido_en_orden"] = True
+
+    recalculo["diferencia_formatos"] = (
+        recalculo["formatos_recomendados"] - recalculo["formatos_pedidos"]
+    )
+    recalculo["desviacion_formatos"] = recalculo["diferencia_formatos"].abs()
+
+    recalculo["estado"] = recalculo.apply(clasificar_estado, axis=1)
+    recalculo["prioridad"] = recalculo.apply(calcular_prioridad, axis=1)
+    recalculo["accion_recomendada"] = recalculo.apply(generar_accion, axis=1)
+
+    cambios_pendientes = recalculo[recalculo["estado"] != "Correcto"]
+
+    if cambios_pendientes.empty:
+        st.success("✅ Con estos valores, la orden queda completamente correcta.")
+    else:
+        st.warning(
+            f"⚠️ Con estos valores, {len(cambios_pendientes)} ingrediente(s) "
+            "todavía generan alerta."
+        )
+        st.dataframe(
+            cambios_pendientes[
+                [
+                    "nombre",
+                    "formatos_pedidos",
+                    "formatos_recomendados",
+                    "estado",
+                    "prioridad",
+                    "accion_recomendada",
+                ]
+            ],
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "nombre": "Ingrediente",
+                "formatos_pedidos": "Pedido editado",
+                "formatos_recomendados": "Recomendado",
+                "estado": "Estado",
+                "prioridad": "Prioridad",
+                "accion_recomendada": "Acción recomendada",
+            },
+        )
 
     # ---------------------------------------------------------
     # DATOS QUE REQUIEREN REVISIÓN

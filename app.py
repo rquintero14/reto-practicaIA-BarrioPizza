@@ -5,6 +5,7 @@ import plotly.express as px
 from src.data_loader import cargar_datos
 from src.alerts import generar_alertas
 from src.validator import validar_datos
+from src.anomalies import detectar_ordenes_atipicas
 
 
 # ---------------------------------------------------------
@@ -49,13 +50,19 @@ def obtener_datos():
         ordenes
     )
 
+    atipicas = detectar_ordenes_atipicas(
+        analisis,
+        consumo
+    )
+
     return (
         ingredientes,
         consumo,
         inventario,
         ordenes,
         analisis,
-        validacion
+        validacion,
+        atipicas
     )
 
 
@@ -65,7 +72,8 @@ def obtener_datos():
     inventario,
     ordenes,
     analisis,
-    validacion
+    validacion, 
+    atipicas
 ) = obtener_datos()
 
 
@@ -316,6 +324,34 @@ with tab_dashboard:
         fig,
         use_container_width=True
     )
+
+    st.divider()
+    st.subheader("🔍 Órdenes atípicas entre sucursales")
+    st.caption(
+        "Compara qué % del pedido semanal de cada ingrediente le corresponde "
+        "a cada sucursal, contra qué % representa históricamente en el consumo "
+        "de ese mismo ingrediente entre las 4 sucursales."
+    )
+
+    if atipicas.empty:
+        st.success("No se detectaron órdenes atípicas esta semana.")
+    else:
+        st.dataframe(
+            atipicas[
+                ["sucursal", "nombre", "proveedor", "participacion_pedido",
+                 "participacion_consumo", "diferencia_puntos"]
+            ],
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "sucursal": "Sucursal",
+                "nombre": "Ingrediente",
+                "proveedor": "Proveedor",
+                "participacion_pedido": st.column_config.NumberColumn("% del pedido", format="%.1f%%"),
+                "participacion_consumo": st.column_config.NumberColumn("% histórico de consumo", format="%.1f%%"),
+                "diferencia_puntos": st.column_config.NumberColumn("Desviación (p.p.)", format="%.1f"),
+            }
+        )
 
 with tab_analisis:
 

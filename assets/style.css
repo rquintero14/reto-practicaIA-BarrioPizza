@@ -1,257 +1,252 @@
 /* ==========================================================
-   SISTEMA INTELIGENTE DE GESTIÓN DE COMPRAS
-   BARRIO PIZZA
-========================================================== */
+   BARRIO PIZZA — Control de Compras
+   ========================================================== */
 
-/* ---------------------------
-   Fondo general
-----------------------------*/
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
-.main .block-container{
-
-    padding-top:2rem;
-    padding-bottom:2rem;
-    max-width:1400px;
-
+:root {
+    --bp-bg: #131110;
+    --bp-surface: #221B15;
+    --bp-surface-2: #2A2119;
+    --bp-border: #3A2C21;
+    --bp-text: #F4E9DA;
+    --bp-text-muted: #B7A490;
+    --bp-tomato: #C13E2A;
+    --bp-tomato-soft: rgba(193, 62, 42, 0.16);
+    --bp-basil: #5C8A52;
+    --bp-basil-soft: rgba(92, 138, 82, 0.16);
+    --bp-cheese: #E0A83E;
+    --bp-cheese-soft: rgba(224, 168, 62, 0.16);
 }
 
+/* ---------- Ancho y márgenes del contenedor ---------- */
 
-/* ---------------------------
-   Títulos
-----------------------------*/
-
-h1{
-
-    font-size:2.4rem !important;
-    font-weight:700 !important;
-    margin-bottom:.3rem;
-
+.main .block-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+    max-width: 1400px;
 }
 
-h2{
+/* ---------- Base ---------- */
 
-    font-size:1.7rem !important;
-
+html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
+    background-color: var(--bp-bg) !important;
+    color: var(--bp-text) !important;
+    font-family: 'Manrope', sans-serif;
 }
 
-h3{
-
-    font-size:1.3rem !important;
-
+[data-testid="stHeader"] {
+    background-color: transparent !important;
 }
 
+/* ---------- Títulos ---------- */
 
-/* ---------------------------
-   Tabs
-----------------------------*/
-
-.stTabs [role="tab-list"]{
-
-    gap:10px;
-    margin-bottom:25px;
-
+h1 {
+    font-family: 'Fraunces', serif !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.01em;
+    color: var(--bp-text) !important;
+    border-bottom: 3px solid var(--bp-tomato);
+    padding-bottom: 0.4rem;
+    display: inline-block;
 }
 
-.stTabs [role="tab"]{
-
-    background:#232323;
-
-    border-radius:5px 5px 0px 0px;
-
-    padding:12px 28px;
-
-    color:#d7d7d7;
-
-    font-weight:600;
-
-    transition:.25s;
-
-    border:none;
-
+h2, h3 {
+    font-family: 'Fraunces', serif !important;
+    font-weight: 600 !important;
+    color: var(--bp-text) !important;
 }
 
-.stTabs [role="tab"]:hover{
-
-    background:#303030;
-
-    color:white;
-
+[data-testid="stCaptionContainer"] {
+    color: var(--bp-text-muted) !important;
+    font-family: 'Manrope', sans-serif;
 }
 
-.stTabs [aria-selected="true"]{
-
-    background:#613030 !important;
-
-    color:white !important;
-
+hr {
+    border-color: var(--bp-border) !important;
 }
 
+/* ---------- Tabs (pestañas de menú) ---------- */
 
-/* ---------------------------
-   Tarjetas INFO
-----------------------------*/
-
-div[data-testid="stAlert"]{
-
-    border-radius:12px;
-
+[data-testid="stTabs"] [data-baseweb="tab-list"] {
+    gap: 4px;
+    border-bottom: 1px solid var(--bp-border);
 }
 
-
-/* ---------------------------
-   Botones
-----------------------------*/
-
-.stButton>button{
-
-    width:100%;
-
-    border-radius:10px;
-
-    border:none;
-
-    padding:.65rem;
-
-    background:#C62828;
-
-    color:white;
-
-    font-weight:600;
-
-    transition:.25s;
-
+[data-testid="stTabs"] [data-baseweb="tab"] {
+    background-color: var(--bp-surface);
+    color: var(--bp-text-muted) !important;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 600;
+    border-radius: 8px 8px 0 0;
+    padding: 14px 22px;
 }
 
-.stButton>button:hover{
-
-    background:#A81E1E;
-
+[data-testid="stTabs"] [data-baseweb="tab"]:hover {
+    background-color: var(--bp-surface-2);
+    color: var(--bp-text) !important;
 }
 
-
-/* ---------------------------
-   Download Button
-----------------------------*/
-
-.stDownloadButton>button{
-
-    width:100%;
-
-    border-radius:10px;
-
-    border:none;
-
-    padding:.70rem;
-
-    background:#C62828;
-
-    color:white;
-
-    font-weight:600;
-
-    transition:.25s;
-
+[data-testid="stTabs"] [aria-selected="true"] {
+    background-color: var(--bp-surface) !important;
+    color: var(--bp-text) !important;
+    border-bottom: 3px solid var(--bp-tomato) !important;
 }
 
-.stDownloadButton>button:hover{
-
-    background:#A81E1E;
-
+/* Ocultamos el indicador nativo de Streamlit para que no compita
+   con nuestro propio subrayado del tab activo. */
+[data-baseweb="tab-highlight"] {
+    display: none !important;
 }
 
+/* ---------- Métricas → "tickets de cocina" ---------- */
 
-/* ---------------------------
-   Selectbox
-----------------------------*/
-
-.stSelectbox>div>div{
-
-    border-radius:10px;
-
+[data-testid="stMetric"] {
+    background-color: var(--bp-surface);
+    border: 1px solid var(--bp-border);
+    border-left: 4px solid var(--bp-tomato);
+    border-radius: 6px;
+    padding: 14px 16px;
 }
 
-
-/* ---------------------------
-   Checkbox
-----------------------------*/
-
-.stCheckbox{
-
-    margin-top:8px;
-    margin-bottom:10px;
-
+[data-testid="stMetricLabel"] {
+    font-family: 'Manrope', sans-serif !important;
+    font-weight: 600 !important;
+    color: var(--bp-text-muted) !important;
+    text-transform: uppercase;
+    font-size: 0.72rem !important;
+    letter-spacing: 0.04em;
 }
 
-
-/* ---------------------------
-   Dataframes
-----------------------------*/
-
-div[data-testid="stDataFrame"]{
-
-    border:1px solid #303030;
-
-    border-radius:12px;
-
-    overflow:hidden;
-
+[data-testid="stMetricValue"] {
+    font-family: 'IBM Plex Mono', monospace !important;
+    font-weight: 600 !important;
+    color: var(--bp-text) !important;
+    font-variant-numeric: tabular-nums;
 }
 
+/* ---------- Alertas (success/warning/error/info) ---------- */
 
-/* ---------------------------
-   Expander
-----------------------------*/
-
-details{
-
-    border-radius:10px;
-
+[data-testid="stAlert"] {
+    background-color: var(--bp-surface-2) !important;
+    background-image: none !important;
+    border: 1px solid var(--bp-border) !important;
+    border-left: 4px solid var(--bp-text-muted) !important;
+    border-radius: 6px;
+    font-family: 'Manrope', sans-serif;
 }
 
-
-/* ---------------------------
-   Separadores
-----------------------------*/
-
-hr{
-
-    margin-top:2rem;
-    margin-bottom:2rem;
-
+[data-testid="stAlert"] * {
+    color: var(--bp-text) !important;
 }
 
+/* ---------- Tablas ---------- */
 
-/* ---------------------------
-   Caption
-----------------------------*/
-
-[data-testid="stCaptionContainer"]{
-
-    color:#9e9e9e;
-
+[data-testid="stDataFrame"] {
+    border: 1px solid var(--bp-border) !important;
+    border-radius: 6px;
+    overflow: hidden;
 }
 
-
-/* ---------------------------
-   Scrollbar
-----------------------------*/
-
-::-webkit-scrollbar{
-
-    width:10px;
-
+[data-testid="stDataFrame"] [role="columnheader"] {
+    background-color: var(--bp-surface-2) !important;
+    color: var(--bp-text) !important;
+    font-family: 'Manrope', sans-serif !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    font-size: 0.72rem !important;
+    letter-spacing: 0.03em;
 }
 
-::-webkit-scrollbar-thumb{
-
-    background:#4a4a4a;
-
-    border-radius:10px;
-
+[data-testid="stDataFrame"] [role="gridcell"] {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
 }
 
-::-webkit-scrollbar-thumb:hover{
+/* ---------- Botones ---------- */
 
-    background:#666;
+.stButton > button, [data-testid="stDownloadButton"] > button {
+    width: 100%;
+    background-color: var(--bp-tomato) !important;
+    color: var(--bp-text) !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 0.65rem !important;
+    font-family: 'Manrope', sans-serif !important;
+    font-weight: 700 !important;
+    transition: transform 0.12s ease, filter 0.12s ease;
+}
 
+.stButton > button:hover, [data-testid="stDownloadButton"] > button:hover {
+    filter: brightness(1.12);
+    transform: translateY(-1px);
+}
+
+.stButton > button:focus-visible, [data-testid="stDownloadButton"] > button:focus-visible {
+    outline: 2px solid var(--bp-cheese);
+    outline-offset: 2px;
+}
+
+/* ---------- Expanders ---------- */
+
+[data-testid="stExpander"] {
+    background-color: var(--bp-surface);
+    border: 1px solid var(--bp-border) !important;
+    border-radius: 6px;
+}
+
+/* ---------- Selectbox / inputs ---------- */
+
+[data-testid="stSelectbox"] div[data-baseweb="select"] > div,
+[data-testid="stNumberInput"] input,
+[data-testid="stTextInput"] input {
+    background-color: var(--bp-surface) !important;
+    border-color: var(--bp-border) !important;
+    color: var(--bp-text) !important;
+    font-family: 'Manrope', sans-serif !important;
+}
+
+/* ---------- Chat con los datos ---------- */
+
+[data-testid="stChatMessage"] {
+    background-color: var(--bp-surface);
+    border: 1px solid var(--bp-border);
+    border-radius: 10px;
+}
+
+[data-testid="stChatInput"] textarea {
+    background-color: var(--bp-surface) !important;
+    color: var(--bp-text) !important;
+    font-family: 'Manrope', sans-serif !important;
+}
+
+[data-testid="stChatInputSubmitButton"] {
+    background-color: var(--bp-tomato) !important;
+}
+
+/* ---------- Scrollbar (contenedor del chat) ---------- */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bp-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--bp-border);
+    border-radius: 4px;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 640px) {
+    [data-testid="stMetricValue"] {
+        font-size: 1.4rem !important;
+    }
+    h1 {
+        font-size: 1.6rem !important;
+    }
 }

@@ -312,14 +312,24 @@ with tab_dashboard:
             "sucursal": "Sucursal",
             "cantidad": "Cantidad de alertas",
             "estado": "Tipo de alerta"
+        },
+        color_discrete_map={
+            "Olvidado": "#C13E2A",
+            "Faltante": "#E0A83E",
+            "Sobrepedido": "#5C8A52",
         }
     )
 
     fig.update_layout(
-        xaxis_title="",
-        yaxis_title="Cantidad de alertas",
-        legend_title="Tipo de alerta"
-    )
+            xaxis_title="",
+            yaxis_title="Cantidad de alertas",
+            legend_title="Tipo de alerta",
+            template="plotly_dark",
+            paper_bgcolor="#17120D",
+            plot_bgcolor="#17120D",
+            font_family="Manrope",
+            colorway=["#C13E2A", "#E0A83E", "#5C8A52", "#B7A490"],
+        )
 
     st.plotly_chart(
         fig,
@@ -453,13 +463,23 @@ with tab_analisis:
 
     fig_historico.update_layout(
         xaxis_title="Semana",
-        yaxis_title=detalle["unidad_base"]
+        yaxis_title=detalle["unidad_base"],
+        template="plotly_dark",
+        paper_bgcolor="#17120D",
+        plot_bgcolor="#17120D",
+        font_family="Manrope",
+        colorway=["#C13E2A"],
+    )
+
+    fig_historico.update_traces(
+        line_color="#C13E2A",
+        marker=dict(color="#C13E2A", size=7)
     )
 
     fig_historico.add_vline(
         x=5.5,
         line_dash="dash",
-        line_color="orange"
+        line_color="#E0A83E"
     )
 
     fig_historico.add_annotation(
@@ -787,7 +807,7 @@ with tab_chat:
     # ---------------------------------------------------------
     st.subheader("💬 Preguntale a tus datos")
     st.caption(
-        "Escribí una pregunta en español normal sobre las órdenes de esta "
+        "Escribe una pregunta en español normal sobre las órdenes de esta "
         "semana. Por ejemplo: '¿qué sucursal está pidiendo demasiado queso?' "
         "o '¿hay algo crítico en Marbella?'"
     )

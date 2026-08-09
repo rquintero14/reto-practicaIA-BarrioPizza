@@ -804,29 +804,28 @@ with tab_chat:
         if "chat_historial" not in st.session_state:
             st.session_state.chat_historial = []
 
-        for pregunta_previa, respuesta_previa in st.session_state.chat_historial:
-            with st.chat_message("user"):
-                st.write(pregunta_previa)
-            with st.chat_message("assistant"):
-                st.write(respuesta_previa)
+        chat_box = st.container(height=450, border=True)
 
-        pregunta = st.chat_input("Escribí tu pregunta acá...")
+        with chat_box:
+            for rol, contenido in st.session_state.chat_historial:
+                with st.chat_message(rol):
+                    st.write(contenido)
+
+        pregunta = st.chat_input("Realiza tu pregunta aquí...")
 
         if pregunta:
-            with st.chat_message("user"):
-                st.write(pregunta)
+            st.session_state.chat_historial.append(("user", pregunta))
 
-            with st.chat_message("assistant"):
-                with st.spinner("Revisando los datos..."):
-                    try:
-                        respuesta = preguntar_datos(
-                            pregunta, analisis, atipicas, api_key
-                        )
-                    except Exception as error:
-                        respuesta = (
-                            "⚠️ No pude conectarme con el modelo de IA. "
-                            f"Detalle técnico: {error}"
-                        )
-                st.write(respuesta)
+            with st.spinner("Revisando los datos..."):
+                try:
+                    respuesta = preguntar_datos(
+                        pregunta, analisis, atipicas, api_key
+                    )
+                except Exception as error:
+                    respuesta = (
+                        "⚠️ No pude conectarme con el modelo de IA. "
+                        f"Detalle técnico: {error}"
+                    )
 
-            st.session_state.chat_historial.append((pregunta, respuesta))        
+            st.session_state.chat_historial.append(("assistant", respuesta))
+            st.rerun()

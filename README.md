@@ -4,7 +4,7 @@ Herramienta que analiza automáticamente las órdenes de compra semanales de las
 
 > Reto técnico para la práctica de IA en Barrio Pizza. Repo original con el enunciado y los datos: https://github.com/soydelbarrio/reto-practicante-ia
 
-**🔗 App en vivo:** _[pegar acá el link de Streamlit Cloud una vez desplegado]_
+**🔗 App en vivo:** [Reto Barrio Pizza - Roniel Quintero](https://reto-practicaia-barriopizza.streamlit.app/)
 **🎥 Video explicativo:** _[pegar acá el link del video]_
 
 ---
@@ -117,7 +117,35 @@ python -m src.anomalies       # Muestra las órdenes atípicas entre sucursales
 
 ## Cómo usé IA para resolverlo
 
-_[Completar acá con el detalle real: qué partes armaste con ayuda de IA (ej. estructura del proyecto, lógica de alertas/prioridad, el módulo de órdenes atípicas, la integración con Gemini, el CSS), qué le pediste explícitamente, y qué decisiones de negocio tomaste vos en vez de aceptar la primera sugerencia (ej. las reglas de prioridad para perecederos, o la normalización por participación en vez de valores absolutos para detectar órdenes atípicas).]_
+Utilicé **Claude y ChatGPT como asistentes durante el desarrollo**, trabajando de forma iterativa sobre el código y los datos reales del reto. La IA no se utilizó simplemente para generar y copiar código: ejecutaba los scripts, compartía los resultados y errores obtenidos y, a partir de ellos, analizábamos alternativas, corregíamos problemas y validábamos decisiones.
+
+La utilicé principalmente para:
+
+- **Analizar y estructurar el problema**, separándolo en carga y validación de datos, proyección de consumo, cálculo de necesidad, conversión a formatos, comparación de órdenes y generación de alertas.
+
+- **Validar la lógica de negocio**, especialmente el promedio ponderado de las últimas seis semanas, el redondeo a formatos completos y la clasificación de faltantes, sobrepedidos y productos olvidados.
+
+- **Manejar casos especiales**, como ingredientes que aparecen en una orden pero no existen en el catálogo (`aji_chombo`) y productos que deberían comprarse pero no fueron incluidos en la orden.
+
+- **Diseñar la detección de órdenes atípicas**, analizando cómo comparar sucursales de diferentes tamaños sin mezclar unidades como kg, litros y unidades. De ahí surgió la comparación de la participación del pedido frente a la participación histórica del consumo por ingrediente.
+
+- **Desarrollar el chat con los datos utilizando Gemini**, definiendo instrucciones para que respondiera únicamente con la información disponible y evitara inventar cifras.
+
+- **Depurar errores**, incluyendo problemas de imports, integración entre módulos, cambios en valores devueltos por funciones, errores de Plotly y warnings relacionados con Streamlit.
+
+- **Mejorar la interfaz**, ayudando a reorganizar el dashboard en pestañas, crear estilos CSS propios, mejorar filtros, tablas y visualizaciones, y diferenciar visualmente el consumo histórico de la proyección.
+
+### Decisiones propias
+
+La IA fue utilizada como apoyo para cuestionar y validar decisiones, pero las decisiones finales fueron tomadas después de probarlas con los datos reales. Entre ellas están:
+
+- Dar mayor prioridad a faltantes de productos perecederos;
+- Separar los datos desconocidos para revisión manual;
+- Utilizar un promedio ponderado en lugar de uno simple;
+- No mezclar unidades diferentes al comparar sucursales;
+- Mantener la edición de órdenes como una simulación aislada;
+
+En resumen, utilicé la IA como un **segundo par de ojos durante el desarrollo**: para razonar, depurar, explorar alternativas y validar la solución, mientras que la implementación y las decisiones finales se probaron sobre los datos reales.
 
 ---
 
